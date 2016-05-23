@@ -1,0 +1,6 @@
+rxplot /robucar/odometry/pose/pose/position/x
+rxplot /robucar/odometry/twist/twist/linear/x
+
+rostopic pub /robucar/cmd_vel geometry_msgs/Twist -- '[1,0,0]' '[0,0,0]'
+
+

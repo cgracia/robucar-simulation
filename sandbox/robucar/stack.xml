@@ -1,0 +1,9 @@
+<stack>
+  <description brief="robucar">robucar</description>
+  <author>Maintained by Carlos</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/robucar</url>
+  <depend stack="ros" />
+
+</stack>

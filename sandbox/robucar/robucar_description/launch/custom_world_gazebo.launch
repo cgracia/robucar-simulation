@@ -1,0 +1,13 @@
+<?xml version="1.0"?> 
+<launch>
+
+  <!-- start world -->
+  <include file="$(find robucar_description)/launch/custom_world.launch"/>
+
+  <!-- send urdf to param server -->
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find robucar_description)/urdf/robucar.urdf.xacro'" />
+
+  <!-- push robot_description to factory and spawn robot in gazebo -->
+  <node name="spawn_robucar" pkg="gazebo" type="spawn_model" args="-urdf -param robot_description -model robucar -z 1" respawn="false" output="screen" />
+
+</launch>

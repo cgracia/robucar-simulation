@@ -1,0 +1,24 @@
+<package>
+  <description brief="robucar_gazebo_plugins">
+
+     robucar_gazebo_plugins
+
+  </description>
+  <author>Carlos</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/robucar_gazebo_plugins</url>
+  
+  <depend package="gazebo"/>
+  <depend package="gazebo_plugins"/>
+  <depend package="roscpp"/>
+  <!--depend package="rosbucar"/-->
+
+  <export>
+    <gazebo plugin_path="${prefix}/lib" />
+  </export>    
+
+
+</package>
+
+

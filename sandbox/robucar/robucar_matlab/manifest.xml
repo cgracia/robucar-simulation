@@ -1,0 +1,17 @@
+<package>
+  <description brief="robucar_matlab">
+
+     robucar_matlab
+
+  </description>
+  <author>Carlos</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/robucar_matlab</url>
+
+  <depend package="ipc_bridge_ros"/>
+  <depend package="ipc_bridge_matlab"/>
+
+</package>
+
+

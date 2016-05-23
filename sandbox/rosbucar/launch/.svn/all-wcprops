@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/ropert/!svn/ver/188/titam/trunk/code/ros/rosbucar/launch
+END
+parking-map.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/ropert/!svn/ver/188/titam/trunk/code/ros/rosbucar/launch/parking-map.yaml
+END
+create_map-2.launch
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/ropert/!svn/ver/188/titam/trunk/code/ros/rosbucar/launch/create_map-2.launch
+END
+parking-map.pgm
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/ropert/!svn/ver/188/titam/trunk/code/ros/rosbucar/launch/parking-map.pgm
+END
+create_map.launch
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/ropert/!svn/ver/163/titam/trunk/code/ros/rosbucar/launch/create_map.launch
+END
+parking-map.png
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/ropert/!svn/ver/188/titam/trunk/code/ros/rosbucar/launch/parking-map.png
+END
+tf_configuration.launch
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/ropert/!svn/ver/146/titam/trunk/code/ros/rosbucar/launch/tf_configuration.launch
+END
+eva.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/ropert/!svn/ver/188/titam/trunk/code/ros/rosbucar/launch/eva.yaml
+END
+visualize-parking.launch
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/repos/ropert/!svn/ver/188/titam/trunk/code/ros/rosbucar/launch/visualize-parking.launch
+END
+map.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/ropert/!svn/ver/188/titam/trunk/code/ros/rosbucar/launch/map.yaml
+END
+map.pgm
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/ropert/!svn/ver/188/titam/trunk/code/ros/rosbucar/launch/map.pgm
+END
+localization.launch
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/ropert/!svn/ver/188/titam/trunk/code/ros/rosbucar/launch/localization.launch
+END
+eva.launch
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/ropert/!svn/ver/146/titam/trunk/code/ros/rosbucar/launch/eva.launch
+END

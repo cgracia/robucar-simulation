@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<launch>
+	<param name="/use_sim_time" value="true"/>
+	<node name="front_laser_tf" pkg="tf" type="static_transform_publisher" args="1.96 0 0.75 0.0 0.0 0.0 base_link front_laser 30"/>
+	<node name="back_laser_tf" pkg="tf" type="static_transform_publisher" args="-0.50 0 0.50 3.14 0.0 0.0 base_link ground_laser 30"/>
+	<node name="ground_laser_tf" pkg="tf" type="static_transform_publisher" args="1.96 0 0.45 0.0 0.2 0.0 base_link back_laser 30"/> 
+	<node name="repair_front_scan" pkg="rosbucar" type="repair_scan">
+		<remap from="in" to="/front_laser/out"/>
+		<remap from="out" to="front_scan" />
+	</node>
+
+	<node name="repair_back_scan" pkg="rosbucar" type="repair_scan">
+		<remap from="in" to="/back_laser/out"/>
+		<remap from="out" to="ground_scan" />
+	</node>
+	<node name="repair_ground_scan" pkg="rosbucar" type="repair_scan">
+		<remap from="in" to="/ground_laser/out"/>
+		<remap from="out" to="back_scan" />
+	</node>
+	<node name="evaclock" pkg="rosbucar" type="clock" />
+	<node name="fuse_scan" pkg="fuse_scans" type="fuse_scans" output="screen">
+		<remap from="from" to="front_scan" />
+		<remap from="to" to="back_scan" />
+		<remap from="out" to="/scan" />
+	</node>
+	<node name="map_builder" pkg="gmapping" type="slam_gmapping">
+		<param name="maxUrange" value="30.0" />	
+	</node>
+<!--
+	<node name="pog" pkg="pog" type="test-pog"/>
+-->
+</launch>

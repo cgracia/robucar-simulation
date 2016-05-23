@@ -1,0 +1,125 @@
+/*
+ * Desc: Gazebo plugin for a Robucar
+ * Author: Carlos Gracia
+ * Date: 19/01/2012
+ */
+
+#ifndef ROBUCAR_PLUGIN_HH
+#define ROBUCAR_PLUGIN_HH
+
+#include "gazebo.hh"
+
+#include "physics/PhysicsTypes.hh"
+
+// ROS
+#include <ros/ros.h>
+#include <nav_msgs/Odometry.h>
+#include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
+
+// Custom Callback Queue
+#include <ros/callback_queue.h>
+#include <ros/advertise_options.h>
+
+#include <boost/bind.hpp>
+#include <boost/thread.hpp>
+
+#include "robucar_gazebo_plugins/wheel.h"
+#include "robucar_gazebo_plugins/robucar.h"
+
+#include "rosbucar/CarLikeCmd.h"
+
+namespace gazebo
+{
+
+class Joint;
+
+class RobucarPlugin : public ModelPlugin 
+{
+  /// \brief Constructor
+public:
+  RobucarPlugin();
+
+  /// \brief Destructor
+public:
+  virtual ~RobucarPlugin();
+
+  /// \brief Load the controller
+  /// \param node XML config node
+protected:
+  virtual void Load(sensors::SensorPtr _parent, sdf::ElementPtr sdf);
+
+  /// \brief Init the controller
+protected:
+  virtual void InitChild();
+
+  /// \brief Update the controller
+protected:
+  virtual void UpdateChild();
+
+  /// \brief Finalize the controller
+protected:
+  virtual void FiniChild();
+
+protected:
+  virtual void publishOdometry();
+
+private:
+  // TODO: The message has been copied from rosbucar to avoid the need to use its dependencies.
+  void cmdVelCallback(const robucar_gazebo_plugins::CarLikeCmdConstPtr & command);
+
+  void setSpeed();
+
+  void broadcastTransforms();
+
+  Model *parent_;
+
+  Wheel wheel_[2][2];
+
+  // TODO: Axles should go away if they are not needed.
+  Joint *axle_joint_[2];
+  Joint *bearing_joint_[2][2];
+  Joint *wheel_joint_[2][2];
+
+  ParamT<std::string> *axleNameP[2];
+  ParamT<std::string> *bearingNameP[2][2];
+  ParamT<std::string> *wheelNameP[2][2];
+
+  ParamT<double> *wheelRadiusP;
+  double wheel_radius_;
+
+  ParamT<double> *axleLengthP;
+  double axle_length_;
+
+  ParamT<double> *axleSeparationP;
+  double axle_separation_;
+
+  ParamT<std::string> *robotNamespaceP;
+  std::string robotNamespace_;
+
+  ParamT<std::string> *topicNameP;
+
+  double required_linear_speed_;
+  double required_angular_speed_;
+  char required_mode_;
+  bool alive_;
+
+  // ROS STUFF
+  ros::NodeHandle* rosnode_;
+  ros::Subscriber sub_;
+  tf::TransformBroadcaster *transform_broadcaster_;
+  std::string tf_prefix_;
+
+  boost::mutex mutex_;
+
+  // Custom Callback Queue
+  ros::CallbackQueue queue_;
+  boost::thread* callback_queue_thread_;
+  void QueueThread();
+
+  ros::Publisher odometry_publisher_;
+  ros::Publisher car_like_info_publisher_;
+};
+
+}
+#endif

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<launch>
+	<param name="/use_sim_time" value="true" />
+	<node name="front_laser_tf" pkg="tf" type="static_transform_publisher" args="1.96 0 0.75 0.0 0.0 0.0 base_link front_laser 30"/>
+
+	<node name="back_laser_tf" pkg="tf" type="static_transform_publisher" args="-0.50 0 0.50 3.14 0.0 0.0 base_link ground_laser 30"/>
+
+	<node name="ground_laser_tf" pkg="tf" type="static_transform_publisher" args="1.96 0 0.45 0.0 -0.2 0.0 base_link back_laser 30"/>
+
+</launch>

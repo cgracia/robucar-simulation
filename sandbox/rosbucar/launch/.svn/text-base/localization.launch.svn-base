@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<launch>
+
+	<param name="/use_sim_time" value="true"/>
+
+	<node name="front_laser_tf" pkg="tf" type="static_transform_publisher" args="1.96 0 0.75 0.0 0.0 0.0 base_link front_laser 25"/>
+	<node name="back_laser_tf" pkg="tf" type="static_transform_publisher" args="-0.44 0 0.75 0.0 0.0 3.14 base_link back_laser 25"/>
+
+	<node name="repair_front_scan" pkg="rosbucar" type="repair_scan">
+		<remap from="in" to="/front_laser/out"/>
+		<remap from="out" to="front_scan" />
+	</node>
+	<node name="repair_back_scan" pkg="rosbucar" type="repair_scan">
+		<remap from="in" to="/ground_laser/out"/>
+		<remap from="out" to="back_scan" />
+	</node>
+
+	<node name="relay_front_laser" pkg="topic_tools" type="relay" args="front_scan /scan" />
+	<node name="relay_back_laser" pkg="topic_tools" type="relay" args="back_scan /scan" />
+
+	<node name="evaclock" pkg="rosbucar" type="clock" />
+
+  <!-- Run the map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find rosbucar)/launch/parking-map.yaml"/>
+
+  <!--- Run AMCL -->
+  <node name="Localization" pkg="amcl" type="amcl" output="screen">
+  	<param name="initial_pose_x" value="-100"/>
+  	<param name="initial_pose_y" value="-223"/> 
+  	<param name="initial_pose_a" value="0.0"/>
+  </node>
+</launch>

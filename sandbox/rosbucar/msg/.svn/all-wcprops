@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/repos/ropert/!svn/ver/94/titam/trunk/code/ros/rosbucar/msg
+END
+DriveInfo.msg
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/ropert/!svn/ver/94/titam/trunk/code/ros/rosbucar/msg/DriveInfo.msg
+END
+CarLikeInfo.msg
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/repos/ropert/!svn/ver/94/titam/trunk/code/ros/rosbucar/msg/CarLikeInfo.msg
+END
+DriveCmd.msg
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/ropert/!svn/ver/94/titam/trunk/code/ros/rosbucar/msg/DriveCmd.msg
+END
+CarLikeCmd.msg
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/ropert/!svn/ver/94/titam/trunk/code/ros/rosbucar/msg/CarLikeCmd.msg
+END

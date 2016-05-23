@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface" 
+       name="Robucar">
+
+  <xacro:macro name="axle" params="axle_name x_position">
+
+    <!-- Axle to join the wheels with the robot. -->
+    <link name="${axle_name}_axle">
+
+      <inertial>
+        <mass value="1.0" />
+        <inertia  ixx="1.0" ixy="0.0"  ixz="0.0"  iyy="1.0"  iyz="0.0"  izz="1.0" />
+      </inertial>
+
+      <visual>
+        <geometry>
+          <cylinder radius="${axle_radius}" length="${axle_length}" />
+        </geometry>
+        <origin rpy="1.57075 0 0" xyz="0 0 0"/>
+        <material name="black">
+          <color rgba="0.1 0 0 1"/>
+        </material>
+      </visual>
+
+      <collision>
+        <geometry>
+          <cylinder radius="${axle_radius}" length="${axle_length}" />
+        </geometry>
+        <origin rpy="1.57075 0 0" xyz="0 0 0"/>
+      </collision>
+
+    </link>
+
+    <gazebo reference="${axle_name}_axle">
+      <material>Gazebo/Red</material>
+      <turnGravityOff>false</turnGravityOff>
+      <selfCollide>false</selfCollide>
+    </gazebo>
+
+    <joint name="base_to_${axle_name}_axle" type="fixed">
+      <parent link="base_link"/>
+      <child link="${axle_name}_axle"/>
+      <origin xyz="${x_position} 0 -.3"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>

@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface" 
+       name="Robucar">
+
+  <xacro:macro name="wheel" params="wheel_name parent_bearing side">
+
+    <!-- Wheel. -->
+    <link name="${wheel_name}_wheel">
+
+      <inertial>
+        <mass value="6.0" />
+        <inertia  ixx="1.0" ixy="0.0"  ixz="0.0"  iyy="1.0"  iyz="0.0"  izz="1.0" />
+      </inertial>
+
+      <visual>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length=".05" />
+        </geometry>
+        <origin rpy="1.57075 0 0" xyz="0 0 0"/>
+        <material name="green">
+          <color rgba="0 .8 0 1"/>
+        </material>
+      </visual>
+
+      <collision>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length=".05" />
+        </geometry>
+        <origin rpy="1.57075 0 0" xyz="0 0 0"/>
+      </collision>
+
+    </link>
+
+    <gazebo reference="${wheel_name}_wheel">
+      <material>Gazebo/Green</material>
+      <turnGravityOff>false</turnGravityOff>
+    </gazebo>
+
+    <joint name="${parent_bearing}_bearing_to_${wheel_name}_wheel" type="continuous">
+      <axis xyz="0 1 0"/>
+      <parent link="${parent_bearing}_bearing"/>
+      <child link="${wheel_name}_wheel"/>
+      <origin xyz="0 ${side*0.02} 0"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>

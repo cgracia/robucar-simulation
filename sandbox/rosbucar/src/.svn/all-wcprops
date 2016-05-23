@@ -1,0 +1,179 @@
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/ropert/!svn/ver/272/titam/trunk/code/ros/rosbucar/src
+END
+VirtualCrabDevice.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/ropert/!svn/ver/163/titam/trunk/code/ros/rosbucar/src/VirtualCrabDevice.cpp
+END
+PureDevice.h
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/ropert/!svn/ver/188/titam/trunk/code/ros/rosbucar/src/PureDevice.h
+END
+TCPTransceiver.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/ropert/!svn/ver/94/titam/trunk/code/ros/rosbucar/src/TCPTransceiver.h
+END
+VirtualCrabDevice.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/ropert/!svn/ver/94/titam/trunk/code/ros/rosbucar/src/VirtualCrabDevice.h
+END
+PureLocalizationDevice.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/ropert/!svn/ver/163/titam/trunk/code/ros/rosbucar/src/PureLocalizationDevice.cpp
+END
+localization2tf.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/ropert/!svn/ver/147/titam/trunk/code/ros/rosbucar/src/localization2tf.cpp
+END
+PureGpsDevice.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/ropert/!svn/ver/272/titam/trunk/code/ros/rosbucar/src/PureGpsDevice.cpp
+END
+PureManager.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/ropert/!svn/ver/163/titam/trunk/code/ros/rosbucar/src/PureManager.cpp
+END
+car2odom.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/ropert/!svn/ver/146/titam/trunk/code/ros/rosbucar/src/car2odom.cpp
+END
+PureLocalizationDevice.h
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/ropert/!svn/ver/123/titam/trunk/code/ros/rosbucar/src/PureLocalizationDevice.h
+END
+PureGpsDevice.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/ropert/!svn/ver/272/titam/trunk/code/ros/rosbucar/src/PureGpsDevice.h
+END
+PureManager.h
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/ropert/!svn/ver/94/titam/trunk/code/ros/rosbucar/src/PureManager.h
+END
+PureDirectoryDevice.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/ropert/!svn/ver/123/titam/trunk/code/ros/rosbucar/src/PureDirectoryDevice.cpp
+END
+RosbuCar.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/ropert/!svn/ver/163/titam/trunk/code/ros/rosbucar/src/RosbuCar.cpp
+END
+PureCarDevice.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/ropert/!svn/ver/188/titam/trunk/code/ros/rosbucar/src/PureCarDevice.cpp
+END
+PureLaserDevice.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/ropert/!svn/ver/163/titam/trunk/code/ros/rosbucar/src/PureLaserDevice.cpp
+END
+get_services.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/ropert/!svn/ver/94/titam/trunk/code/ros/rosbucar/src/get_services.cpp
+END
+PureDiffDevice.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/ropert/!svn/ver/94/titam/trunk/code/ros/rosbucar/src/PureDiffDevice.cpp
+END
+PureDriveDevice.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/ropert/!svn/ver/163/titam/trunk/code/ros/rosbucar/src/PureDriveDevice.cpp
+END
+PureDirectoryDevice.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/ropert/!svn/ver/118/titam/trunk/code/ros/rosbucar/src/PureDirectoryDevice.h
+END
+PureCarDevice.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/ropert/!svn/ver/190/titam/trunk/code/ros/rosbucar/src/PureCarDevice.h
+END
+repair_scan.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/ropert/!svn/ver/134/titam/trunk/code/ros/rosbucar/src/repair_scan.cpp
+END
+PureLaserDevice.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/ropert/!svn/ver/123/titam/trunk/code/ros/rosbucar/src/PureLaserDevice.h
+END
+PureDiffDevice.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/ropert/!svn/ver/94/titam/trunk/code/ros/rosbucar/src/PureDiffDevice.h
+END
+PureDriveDevice.h
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/repos/ropert/!svn/ver/94/titam/trunk/code/ros/rosbucar/src/PureDriveDevice.h
+END
+PureFrame.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/ropert/!svn/ver/94/titam/trunk/code/ros/rosbucar/src/PureFrame.h
+END
+PureDevice.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/repos/ropert/!svn/ver/188/titam/trunk/code/ros/rosbucar/src/PureDevice.cpp
+END
+clock.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/ropert/!svn/ver/124/titam/trunk/code/ros/rosbucar/src/clock.cpp
+END
+TCPTransceiver.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/ropert/!svn/ver/163/titam/trunk/code/ros/rosbucar/src/TCPTransceiver.cpp
+END

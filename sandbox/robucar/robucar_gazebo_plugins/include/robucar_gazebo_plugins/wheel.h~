@@ -1,0 +1,49 @@
+/*
+ * Wheel.h
+ *
+ *  Created on: Feb 24, 2012
+ *      Author: Carlos Gracia
+ */
+
+#ifndef WHEEL_H_
+#define WHEEL_H_
+
+#include <gazebo/Angle.hh>
+#include <gazebo/Model.hh>
+
+
+#include <ros/ros.h>
+
+namespace gazebo
+{
+
+class Wheel
+{
+public:
+  Wheel();
+  ~Wheel();
+
+  void Init(Joint *bearingJoint, Joint *wheelJoint, double bearingMaxForce, double bearingMaxTorque,
+            double wheelMaxForce, double wheelMaxTorque, double wheelRadius);
+
+  void SetAnglePID(Angle required_angle);
+
+  void SetSpeed(double required_speed);
+
+  Angle GetMaxAngle();
+
+  Angle GetMinAngle();
+
+private:
+  double prev_error_, prev_prev_error_, prev_output_, wheel_radius_;
+
+  Joint *bearing_;
+  Joint *wheel_;
+
+  Angle bearing_max_angle_;
+  Angle bearing_min_angle_;
+};
+
+}
+
+#endif /* WHEEL_H_ */

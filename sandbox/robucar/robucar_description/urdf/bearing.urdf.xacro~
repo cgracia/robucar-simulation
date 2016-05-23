@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface" 
+       name="Robucar">
+
+  <xacro:macro name="bearing" params="bearing_name parent_axle side">
+
+    <!-- Wheel. -->
+    <link name="${bearing_name}_bearing">
+
+      <inertial>
+        <mass value="0.1" />
+        <inertia  ixx="1.0" ixy="0.0"  ixz="0.0"  iyy="1.0"  iyz="0.0"  izz="1.0" />
+      </inertial>
+
+      <visual>
+        <geometry>
+          <cylinder radius="${axle_radius}" length=".02" />
+        </geometry>
+        <origin rpy="1.57075 0 0" xyz="0 0 0"/>
+        <material name="yellow">
+          <color rgba="0.8 .8 0 1"/>
+        </material>
+      </visual>
+
+      <collision>
+        <geometry>
+          <cylinder radius="${axle_radius}" length=".02" />
+        </geometry>
+        <origin rpy="1.57075 0 0" xyz="0 0 0"/>
+      </collision>
+
+    </link>
+
+    <gazebo reference="${bearing_name}_bearing">
+      <material>Gazebo/Yellow</material>
+      <turnGravityOff>false</turnGravityOff>
+    </gazebo>
+
+    <joint name="${parent_axle}_axle_to_${bearing_name}_bearing" type="revolute">
+      <axis xyz="0 0 1"/>
+      <parent link="${parent_axle}_axle"/>
+      <child link="${bearing_name}_bearing"/>
+      <origin xyz="0 ${side*axle_length/2} 0"/>
+      <limit lower="${wheel_turn_lower}" upper="${wheel_turn_upper}" effort ="100000" velocity="100000"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>

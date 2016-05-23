@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/repos/ropert/!svn/ver/204/titam/trunk/code/ros/gps_novatel
+END
+mainpage.dox
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/ropert/!svn/ver/200/titam/trunk/code/ros/gps_novatel/mainpage.dox
+END
+CMakeLists.txt
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/ropert/!svn/ver/197/titam/trunk/code/ros/gps_novatel/CMakeLists.txt
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/ropert/!svn/ver/198/titam/trunk/code/ros/gps_novatel/Makefile
+END
+manifest.xml
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/ropert/!svn/ver/201/titam/trunk/code/ros/gps_novatel/manifest.xml
+END

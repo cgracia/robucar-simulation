@@ -1,0 +1,8 @@
+#front_laser: {server: 192.168.1.4, device: 2, topic: front_laser, period: 0}
+#ground_laser: {server: 192.168.1.3, device: 4, topic: ground_laser, period: 0}
+#back_laser: {server: 192.168.1.2, device: 5, topic: back_laser, period: 0}
+#gps: {server: 192.168.1.3, device: 3, topic: gps, period: 0}
+#localization: {server: 192.168.1.3, device: 7, topic: localization, period: 0}
+car: {server: 192.168.1.2, device: 4, topic: car, period: 0}
+#drive: {server: 192.168.1.2, device: 2, topic: drive, period: 0}
+

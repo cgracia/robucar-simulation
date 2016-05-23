@@ -1,0 +1,1 @@
+/usr/bin/c++   -O2 -g     -pthread CMakeFiles/utm_odometry_node.dir/src/utm_odometry_node.o  -o ../bin/utm_odometry_node -rdynamic -L/opt/ros/fuerte/lib -lmessage_filters -lroscpp -lrostime -lrosconsole -lroscpp_serialization -lxmlrpcpp -Wl,-rpath,/opt/ros/fuerte/lib 

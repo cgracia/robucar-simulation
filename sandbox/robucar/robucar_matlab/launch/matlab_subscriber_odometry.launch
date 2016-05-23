@@ -1,0 +1,18 @@
+<launch>
+
+  <node pkg="ipc"
+    name="central"
+    type="central"
+    output="screen"
+    args="-su">
+  </node>
+
+  <node pkg="ipc_nav_msgs"
+    name="odometry_node"
+    type="nav_msgs_Odometry_publisher"
+    output="screen">
+    <remap from="~topic" to="/robucar/odometry"/>
+    <param name="message" value="odometry"/>
+  </node>
+
+</launch>

@@ -1,0 +1,654 @@
+/*
+ * Desc: Gazebo plugin for a Robucar
+ * Author: Carlos Gracia
+ * Date: 19/01/2012
+ */
+
+#include "robucar_gazebo_plugins/robucar_plugin.h"
+
+#include <algorithm>
+#include <assert.h>
+#include <math.h>
+
+#include <ros/ros.h>
+#include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
+
+#include <boost/bind.hpp>
+
+#include "robucar_gazebo_plugins/CarLikeInfo.h"
+
+enum Mode
+{
+  CAR, FOUR_WHEELS, CRAB
+};
+
+enum PositionX
+{
+  FRONT, BACK
+};
+
+enum PositionY
+{
+  LEFT, RIGHT
+};
+
+const double PI = 4 * atan(1.0);
+
+using namespace gazebo;
+
+GZ_REGISTER_MODEL_PLUGIN(RobucarPlugin)
+;
+
+////////////////////////////////////////////////////////////////////////////////
+// Constructor
+RobucarPlugin::RobucarPlugin()
+{
+  // TODO: Use a yaml file for storing parameters instead of the urdf. Way more elegant.
+
+// TODO: This has changed, take it out once you make the plugin work again
+/*
+  parent_ = dynamic_cast<Model*> (parent);
+
+  Param::Begin(&parameters);
+  axleNameP[FRONT] = new ParamT<std::string> ("frontAxleName", "", 1);
+  bearingNameP[FRONT][LEFT] = new ParamT<std::string> ("frontLeftBearingName", "", 1);
+  wheelNameP[FRONT][LEFT] = new ParamT<std::string> ("frontLeftWheelName", "", 1);
+  bearingNameP[FRONT][RIGHT] = new ParamT<std::string> ("frontRightBearingName", "", 1);
+  wheelNameP[FRONT][RIGHT] = new ParamT<std::string> ("frontRightWheelName", "", 1);
+  axleNameP[BACK] = new ParamT<std::string> ("backAxleName", "", 1);
+  bearingNameP[BACK][LEFT] = new ParamT<std::string> ("backLeftBearingName", "", 1);
+  wheelNameP[BACK][LEFT] = new ParamT<std::string> ("backLeftWheelName", "", 1);
+  bearingNameP[BACK][RIGHT] = new ParamT<std::string> ("backRightBearingName", "", 1);
+  wheelNameP[BACK][RIGHT] = new ParamT<std::string> ("backRightWheelName", "", 1);
+
+  wheelRadiusP = new ParamT<double> ("wheelRadius", 0.3, 1);
+  axleLengthP = new ParamT<double> ("axleLength", 1.2, 1);
+  axleSeparationP = new ParamT<double> ("axleSeparation", 1.2, 1);
+
+  robotNamespaceP = new ParamT<std::string> ("robotNamespace", "/", 0);
+  topicNameP = new ParamT<std::string> ("topicName", "", 1);
+  Param::End();
+
+  alive_ = true;
+*/
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Destructor
+RobucarPlugin::~RobucarPlugin()
+{
+  for (int i = 0; i <= 1; i++)
+  {
+    delete axleNameP[i];
+    for (int j = 0; j <= 1; j++)
+    {
+      delete bearingNameP[i][j];
+      delete wheelNameP[i][j];
+    }
+  }
+
+  delete wheelRadiusP;
+  delete axleLengthP;
+  delete axleSeparationP;
+  delete robotNamespaceP;
+  delete topicNameP;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Load the controller
+void RobucarPlugin::LoadChild(XMLConfigNode *node)
+{
+  // Get the names of the joints to be controlled.
+  for (int i = 0; i <= 1; i++)
+  {
+    axleNameP[i] -> Load(node);
+    for (int j = 0; j <= 1; j++)
+    {
+      bearingNameP[i][j] -> Load(node);
+      wheelNameP[i][j] -> Load(node);
+    }
+  }
+
+  for (int i = 0; i <= 1; i++)
+  {
+    axle_joint_[i] = parent_-> GetJoint(**axleNameP[i]);
+    for (int j = 0; j <= 1; j++)
+    {
+      bearing_joint_[i][j] = parent_ -> GetJoint(**bearingNameP[i][j]);
+      wheel_joint_[i][j] = parent_ -> GetJoint(**wheelNameP[i][j]);
+    }
+  }
+
+  // Check whether the joints are loaded or not.
+  if (!axle_joint_[FRONT])
+    gzthrow("The controller couldn't get front_axle");
+  if (!bearing_joint_[FRONT][LEFT])
+    gzthrow("The controller couldn't get front_left_bearing");
+  if (!wheel_joint_[FRONT][LEFT])
+    gzthrow("The controller couldn't get front_left_wheel");
+  if (!bearing_joint_[FRONT][RIGHT])
+    gzthrow("The controller couldn't get front_right_bearing");
+  if (!wheel_joint_[FRONT][RIGHT])
+    gzthrow("The controller couldn't get front_right_wheel");
+  if (!axle_joint_[BACK])
+    gzthrow("The controller couldn't get back_axle");
+  if (!bearing_joint_[BACK][LEFT])
+    gzthrow("The controller couldn't get back_left_bearing");
+  if (!wheel_joint_[BACK][LEFT])
+    gzthrow("The controller couldn't get back_left_wheel");
+  if (!bearing_joint_[BACK][RIGHT])
+    gzthrow("The controller couldn't get back_right_bearing");
+  if (!wheel_joint_[BACK][RIGHT])
+    gzthrow("The controller couldn't get back_right_wheel");
+
+  // Get geometry.
+  wheel_radius_ = wheelRadiusP->GetValue();
+  axle_length_ = axleLengthP->GetValue();
+  axle_separation_ = axleSeparationP->GetValue();
+
+  // TODO: Everything would be much nicer if you had a robot class.
+
+  // Initialize wheels.
+  // TODO: Force limits, right now it is completely arbitrary.
+  double max = 5000000;
+  for (int i = 0; i <= 1; i++)
+  {
+    for (int j = 0; j <= 1; j++)
+    {
+      wheel_[i][j].Init(bearing_joint_[i][j], wheel_joint_[i][j], max, max, max, max, wheel_radius_);
+    }
+  }
+
+  // Set initial speed to 0, CAR mode.
+  required_linear_speed_ = 0;
+  required_angular_speed_ = 0;
+  required_mode_ = CAR;
+
+  // Initialize the ROS node and subscribe to cmd_vel.
+  robotNamespaceP->Load(node);
+  robotNamespace_ = robotNamespaceP->GetValue();
+
+  int argc = 0;
+  char** argv = NULL;
+  ros::init(argc, argv, "robucar_plugin", ros::init_options::NoSigintHandler | ros::init_options::AnonymousName);
+  rosnode_ = new ros::NodeHandle(robotNamespace_);
+
+  tf_prefix_ = tf::getPrefixParam(*rosnode_);
+  transform_broadcaster_ = new tf::TransformBroadcaster();
+
+  topicNameP->Load(node);
+  std::string topic_name = topicNameP->GetValue();
+
+  // ROS: Subscribe to the velocity command topic (usually "cmd_vel")
+  ros::SubscribeOptions so;
+  so
+      = ros::SubscribeOptions::create<robucar_gazebo_plugins::CarLikeCmd>(topic_name, 1,
+                                                                          boost::bind(&RobucarPlugin::cmdVelCallback,
+                                                                                      this, _1), ros::VoidPtr(),
+                                                                          &queue_);
+  sub_ = rosnode_->subscribe(so);
+  odometry_publisher_ = rosnode_->advertise<nav_msgs::Odometry> ("odometry", 1);
+  car_like_info_publisher_ = rosnode_->advertise<robucar_gazebo_plugins::CarLikeInfo> ("car_like_info", 1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Initialize the controller
+void RobucarPlugin::InitChild()
+{
+  callback_queue_thread_ = new boost::thread(boost::bind(&RobucarPlugin::QueueThread, this));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Update the controller
+void RobucarPlugin::UpdateChild()
+{
+
+  /***************************************************************/
+  /*                                                             */
+  /*  this is called at every update simulation step             */
+  /*                                                             */
+  /***************************************************************/
+
+  setSpeed();
+
+  publishOdometry();
+
+  broadcastTransforms();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Finalize the controller
+void RobucarPlugin::FiniChild()
+{
+  alive_ = false;
+
+  // Custom Callback Queue
+  queue_.clear();
+  queue_.disable();
+  rosnode_->shutdown();
+  callback_queue_thread_->join();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Get and publish odometry.
+void RobucarPlugin::publishOdometry()
+{
+  // Get current time and position from the simulator
+  mutex_.lock();
+  ros::Time current_time((Simulator::Instance()->GetSimTime()).sec, (Simulator::Instance()->GetSimTime()).nsec);
+  Pose3d current_pose = parent_ -> GetWorldPose();
+  Vector3 current_linear_vel = parent_ -> GetWorldLinearVel();
+  Vector3 current_angular_vel = parent_ -> GetWorldAngularVel();
+  mutex_.unlock();
+
+  // TODO: Getting the angular velocity from the world reference is not working well
+
+  // Odometry
+  nav_msgs::Odometry odometry;
+
+  odometry.header.stamp = current_time;
+  odometry.header.frame_id = "world";
+  odometry.child_frame_id = "robot";
+
+  odometry.pose.pose.position.x = current_pose.pos.x;
+  odometry.pose.pose.position.y = current_pose.pos.y;
+  odometry.pose.pose.position.z = current_pose.pos.z;
+
+  odometry.pose.pose.orientation.w = current_pose.rot.u;
+  odometry.pose.pose.orientation.x = current_pose.rot.x;
+  odometry.pose.pose.orientation.y = current_pose.rot.y;
+  odometry.pose.pose.orientation.z = current_pose.rot.z;
+
+  odometry.twist.twist.linear.x = current_linear_vel.x;
+  odometry.twist.twist.linear.y = current_linear_vel.y;
+  odometry.twist.twist.linear.z = current_linear_vel.z;
+
+  odometry.twist.twist.angular.x = current_angular_vel.x;
+  odometry.twist.twist.angular.y = current_angular_vel.y;
+  odometry.twist.twist.angular.z = current_angular_vel.z;
+
+  odometry_publisher_.publish(odometry);
+
+  // Car like info
+  robucar_gazebo_plugins::CarLikeInfo car_like_info;
+
+  car_like_info.header.stamp = current_time;
+  car_like_info.status = 0; // TODO: What goes here?
+
+  // Find out whether the robot is moving forwards or backwards.
+  Vector3 robot_orientation = current_pose.rot.GetAsEuler();
+  double speed_angle_z = atan2(current_linear_vel.y, current_linear_vel.x);
+  int speed_sign;
+  if (std::abs(speed_angle_z - robot_orientation.z) < PI / 2)
+  {
+    speed_sign = 1;
+  }
+  else
+  {
+    speed_sign = -1;
+  }
+  // Speed in the z axis should be useful for slopes.
+  car_like_info.current_speed = speed_sign * sqrt(pow(current_linear_vel.x, 2) + pow(current_linear_vel.y, 2)
+      + pow(current_linear_vel.z, 2));
+  car_like_info.current_steering = current_angular_vel.z;
+  car_like_info.target_speed = required_linear_speed_;
+  car_like_info.target_steering = required_angular_speed_;
+
+  car_like_info_publisher_.publish(car_like_info);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Store the velocities from the ROS message.
+void RobucarPlugin::cmdVelCallback(const robucar_gazebo_plugins::CarLikeCmdConstPtr & command)
+{
+  boost::mutex::scoped_lock lock(mutex_);
+
+  required_linear_speed_ = command->target_speed;
+  required_angular_speed_ = command->target_steering;
+
+  //rostopic pub /robucar/cmd_vel robucar_gazebo_plugins/CarLikeCmd -- '0' '0.2' '0.0'
+
+  // TODO: Assume we are just using car mode, find out later how is the mode chosen (take into account that messages are different)
+  /*
+   if ((cmd_msg->linear.y > -0.5) && (cmd_msg->linear.y < 0.5))
+   {
+   required_mode_ = CAR;
+   }
+   else if (cmd_msg->linear.y < 1.5)
+   {
+   required_mode_ = FOUR_WHEELS;
+   }
+   else if (cmd_msg->linear.y < 2.5)
+   {
+   required_mode_ = CRAB;
+   }
+   */
+  required_mode_ = CAR;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Custom callback queue thread
+void RobucarPlugin::QueueThread()
+{
+  static const double timeout = 0.01;
+
+  while (alive_ && rosnode_->ok())
+  {
+    queue_.callAvailable(ros::WallDuration(timeout));
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Uses the speed from the command message and sets the required angle and speed of all the wheels.
+void RobucarPlugin::setSpeed()
+{
+  if (required_mode_ == CAR)
+  {
+    double turn_radius;
+    Angle angle[2][2];
+
+    boost::mutex::scoped_lock lock(mutex_); // Make sure it reads from the same pair of speeds.
+
+    // Required speed is calculated for the middle point of the back axle, it is easier to calculate from there.
+    // Rigid body kinematics are used to compute the linear speed. Angular speed is constant.
+    double V_0y = required_angular_speed_ * axle_separation_;
+    double V_0x = sqrt(pow(required_linear_speed_, 2) - pow(V_0y, 2));
+    double linear_speed_back = V_0x;
+
+    // Check whether the robot is expected to turn or not, in order to avoid division by 0.
+
+    if (required_angular_speed_ == 0.0)
+    {
+      angle[FRONT][LEFT].SetFromRadian(0.0);
+      angle[FRONT][RIGHT].SetFromRadian(0.0);
+    }
+    else
+    {
+      turn_radius = linear_speed_back / required_angular_speed_;
+      if (required_angular_speed_ > 0) // Turn left.
+      {
+        angle[FRONT][LEFT].SetFromRadian(atan(axle_separation_ / (abs(turn_radius) - (axle_length_ / 2))));
+        angle[FRONT][RIGHT].SetFromRadian(atan(axle_separation_ / (abs(turn_radius) + (axle_length_ / 2))));
+      }
+      else // Turn right.
+      {
+        angle[FRONT][LEFT].SetFromRadian(-atan(axle_separation_ / (abs(turn_radius) + (axle_length_ / 2))));
+        angle[FRONT][RIGHT].SetFromRadian(-atan(axle_separation_ / (abs(turn_radius) - (axle_length_ / 2))));
+      }
+    }
+
+    // Since we are in car mode, back wheels are straight.
+    angle[BACK][LEFT].SetFromRadian(0.0);
+    angle[BACK][RIGHT].SetFromRadian(0.0);
+
+    // Saturation, don't ask the controller for an angle outside its limits.
+    // TODO: Calculate maximum turning radius, use that as a limit.
+    // TODO: Maybe move the saturation to the wheel class.
+    for (int i = 0; i <= 1; i++)
+    {
+      if (angle[FRONT][i] > wheel_[FRONT][i].GetMaxAngle())
+      {
+        angle[FRONT][i] = wheel_[FRONT][i].GetMaxAngle();
+      }
+    }
+
+    /*
+     // TODO: Plot things to tune the PID constants.
+     geometry_msgs::Twist msg;
+     pub = nh.advertise<geometry_msgs::Twist>("checkPID", 5);
+     msg.linear.x = front_left_angle.GetAsRadian();
+     msg.linear.y = front_left_bearing->GetAngle(0).GetAsRadian();
+     msg.linear.z = (Simulator::Instance()->GetSimTime()).Double();
+     pub.publish(msg);
+     */
+
+    double speed[2][2];
+
+    if (required_angular_speed_ > 0) // Turn left.
+    {
+      speed[FRONT][LEFT] = sqrt(pow(linear_speed_back - (required_angular_speed_ * axle_length_ / 2), 2)
+          + pow(required_angular_speed_ * axle_separation_, 2));
+      speed[FRONT][RIGHT] = sqrt(pow(linear_speed_back + (required_angular_speed_ * axle_length_ / 2), 2)
+          + pow(required_angular_speed_ * axle_separation_, 2));
+      speed[BACK][LEFT] = linear_speed_back - (required_angular_speed_ * axle_length_ / 2);
+      speed[BACK][RIGHT] = linear_speed_back + (required_angular_speed_ * axle_length_ / 2);
+    }
+    else // Turn right.
+    {
+      speed[FRONT][LEFT] = sqrt(pow(linear_speed_back + (required_angular_speed_ * axle_length_ / 2), 2)
+          + pow(required_angular_speed_ * axle_separation_, 2));
+      speed[FRONT][RIGHT] = sqrt(pow(linear_speed_back - (required_angular_speed_ * axle_length_ / 2), 2)
+          + pow(required_angular_speed_ * axle_separation_, 2));
+      speed[BACK][LEFT] = linear_speed_back + (required_angular_speed_ * axle_length_ / 2);
+      speed[BACK][RIGHT] = linear_speed_back - (required_angular_speed_ * axle_length_ / 2);
+    }
+
+    // Check whether the robot has go forwards of backwards.
+    int speed_sign;
+    if (required_linear_speed_ != 0)
+    {
+      speed_sign = required_linear_speed_ / std::abs(required_linear_speed_);
+    }
+    else
+    {
+      speed_sign = 0;
+    }
+
+    // Send the commands to the wheels.
+    for (int i = 0; i <= 1; i++)
+    {
+      for (int j = 0; j <= 1; j++)
+      {
+        wheel_[i][j].SetSpeed(speed_sign * speed[i][j]);
+        wheel_[i][j].SetAnglePID(angle[i][j]);
+      }
+    }
+  }
+  else if (required_mode_ == FOUR_WHEELS)
+  {
+    double turn_radius;
+    Angle angle[2][2];
+
+    boost::mutex::scoped_lock lock(mutex_); // Make sure it reads from the same pair of speeds.
+
+    // Check whether the robot is expected to turn or not, in order to avoid division by 0.
+
+    if (required_angular_speed_ == 0.0)
+    {
+      angle[FRONT][LEFT].SetFromRadian(0.0);
+      angle[FRONT][RIGHT].SetFromRadian(0.0);
+      angle[BACK][LEFT].SetFromRadian(0.0);
+      angle[BACK][RIGHT].SetFromRadian(0.0);
+    }
+    else
+    {
+      turn_radius = required_linear_speed_ / required_angular_speed_;
+      if (required_angular_speed_ > 0) // Turn left.
+      {
+        angle[FRONT][LEFT].SetFromRadian(atan(axle_separation_ / (2 * (abs(turn_radius) - (axle_length_ / 2)))));
+        angle[FRONT][RIGHT].SetFromRadian(atan(axle_separation_ / (2 * (abs(turn_radius) + (axle_length_ / 2)))));
+        angle[BACK][LEFT].SetFromRadian(-atan(axle_separation_ / (2 * (abs(turn_radius) - (axle_length_ / 2)))));
+        angle[BACK][RIGHT].SetFromRadian(-atan(axle_separation_ / (2 * (abs(turn_radius) + (axle_length_ / 2)))));
+      }
+      else // Turn right.
+      {
+        angle[FRONT][LEFT].SetFromRadian(-atan(axle_separation_ / (2 * (abs(turn_radius) + (axle_length_ / 2)))));
+        angle[FRONT][RIGHT].SetFromRadian(-atan(axle_separation_ / (2 * (abs(turn_radius) - (axle_length_ / 2)))));
+        angle[BACK][LEFT].SetFromRadian(atan(axle_separation_ / (2 * (abs(turn_radius) + (axle_length_ / 2)))));
+        angle[BACK][RIGHT].SetFromRadian(atan(axle_separation_ / (2 * (abs(turn_radius) - (axle_length_ / 2)))));
+      }
+    }
+
+    // Saturation, don't ask the controller for an angle outside its limits.
+    // TODO: Calculate maximum turning radius, use that as a limit.
+
+    for (int i = 0; i <= 1; i++)
+    {
+      for (int j = 0; j <= 1; j++)
+      {
+        if (angle[i][j] > wheel_[i][j].GetMaxAngle())
+        {
+          angle[i][j] = wheel_[i][j].GetMaxAngle();
+        }
+      }
+    }
+
+    /*
+     // TODO: Plot things to tune the PID constants.
+     geometry_msgs::Twist msg;
+     pub = nh.advertise<geometry_msgs::Twist>("checkPID", 5);
+     msg.linear.x = front_left_angle.GetAsRadian();
+     msg.linear.y = front_left_bearing->GetAngle(0).GetAsRadian();
+     msg.linear.z = (Simulator::Instance()->GetSimTime()).Double();
+     pub.publish(msg);
+     */
+
+    double speed[2][2];
+
+    if (required_angular_speed_ > 0) // Turn left.
+    {
+      speed[FRONT][LEFT] = sqrt(pow(required_linear_speed_ - (required_angular_speed_ * axle_length_ / 2), 2)
+          + pow(required_angular_speed_ * axle_separation_ / 2, 2));
+      speed[FRONT][RIGHT] = sqrt(pow(required_linear_speed_ + (required_angular_speed_ * axle_length_ / 2), 2)
+          + pow(required_angular_speed_ * axle_separation_ / 2, 2));
+      speed[BACK][LEFT] = sqrt(pow(required_linear_speed_ - (required_angular_speed_ * axle_length_ / 2), 2)
+          + pow(required_angular_speed_ * axle_separation_ / 2, 2));
+      speed[BACK][RIGHT] = sqrt(pow(required_linear_speed_ + (required_angular_speed_ * axle_length_ / 2), 2)
+          + pow(required_angular_speed_ * axle_separation_ / 2, 2));
+    }
+    else // Turn right.
+    {
+      speed[FRONT][LEFT] = sqrt(pow(required_linear_speed_ + (required_angular_speed_ * axle_length_ / 2), 2)
+          + pow(required_angular_speed_ * axle_separation_ / 2, 2));
+      speed[FRONT][RIGHT] = sqrt(pow(required_linear_speed_ - (required_angular_speed_ * axle_length_ / 2), 2)
+          + pow(required_angular_speed_ * axle_separation_ / 2, 2));
+      speed[BACK][LEFT] = sqrt(pow(required_linear_speed_ + (required_angular_speed_ * axle_length_ / 2), 2)
+          + pow(required_angular_speed_ * axle_separation_ / 2, 2));
+      speed[BACK][RIGHT] = sqrt(pow(required_linear_speed_ - (required_angular_speed_ * axle_length_ / 2), 2)
+          + pow(required_angular_speed_ * axle_separation_ / 2, 2));
+    }
+
+    // Send the commands to the wheels.
+    for (int i = 0; i <= 1; i++)
+    {
+      for (int j = 0; j <= 1; j++)
+      {
+        wheel_[i][j].SetSpeed(speed[i][j]);
+        wheel_[i][j].SetAnglePID(angle[i][j]);
+      }
+    }
+  }
+  else if (required_mode_ == CRAB)
+  {
+    double turn_radius; // Not really, just used to get the proper relation between wheel angles.
+    Angle angle[2][2], required_robot_angle, required_angle[2];
+
+    boost::mutex::scoped_lock lock(mutex_);
+
+    // TODO: Temporal use of required_angular_speed_ as required angle for crab mode.
+    required_robot_angle = required_angular_speed_;
+
+    if (required_robot_angle == 0.0)
+    {
+      angle[FRONT][LEFT].SetFromRadian(0.0);
+      angle[FRONT][RIGHT].SetFromRadian(0.0);
+      angle[BACK][LEFT].SetFromRadian(0.0);
+      angle[BACK][RIGHT].SetFromRadian(0.0);
+    }
+    else
+    {
+      // Lovely trigonometry and rigid body kinematics.
+      turn_radius = axle_separation_ / (2 * tan(std::abs(required_robot_angle.GetAsRadian())));
+
+      if (required_robot_angle > 0) // Move right.
+      {
+        required_angle[LEFT].SetFromRadian(atan(axle_separation_ / (2 * (turn_radius + (axle_length_ / 2)))));
+        required_angle[RIGHT].SetFromRadian(atan(axle_separation_ / (2 * (turn_radius - (axle_length_ / 2)))));
+      }
+      else // Move left.
+      {
+        required_angle[LEFT].SetFromRadian(atan(axle_separation_ / (2 * (turn_radius - (axle_length_ / 2)))));
+        required_angle[RIGHT].SetFromRadian(atan(axle_separation_ / (2 * (turn_radius + (axle_length_ / 2)))));
+      }
+
+      angle[FRONT][LEFT].SetFromRadian(required_angle[LEFT].GetAsRadian());
+      angle[FRONT][RIGHT].SetFromRadian(required_angle[RIGHT].GetAsRadian());
+      angle[BACK][LEFT].SetFromRadian(required_angle[LEFT].GetAsRadian());
+      angle[BACK][RIGHT].SetFromRadian(required_angle[RIGHT].GetAsRadian());
+    }
+
+    for (int i = 0; i <= 1; i++)
+    {
+      for (int j = 0; j <= 1; j++)
+      {
+        wheel_[i][j].SetSpeed(required_linear_speed_);
+        wheel_[i][j].SetAnglePID(angle[i][j]);
+      }
+    }
+  }
+  else
+  {
+    gzthrow("No mode selected.");
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Broadcast the transform tree for Rviz.
+void RobucarPlugin::broadcastTransforms()
+{
+  // TODO: Talking with RVIZ. Is it really necessary?
+  // Broadcast transforms for RVIZ.
+  ros::Time current_time((Simulator::Instance()->GetSimTime()).sec, (Simulator::Instance()->GetSimTime()).nsec);
+  Pose3d current_pose = parent_ -> GetWorldPose();
+
+  tf::Transform transform;
+  transform.setOrigin(tf::Vector3(current_pose.pos.x, current_pose.pos.y, current_pose.pos.z));
+  transform.setRotation(tf::Quaternion(current_pose.rot.u, current_pose.rot.x, current_pose.rot.y, current_pose.rot.z));
+
+  std::vector<tf::StampedTransform> transforms_vector;
+  transforms_vector.resize(3); // Should be the number of links.
+
+  transforms_vector[0].setOrigin(tf::Vector3(current_pose.pos.x, current_pose.pos.y, current_pose.pos.z));
+  transforms_vector[0].setRotation(tf::Quaternion(current_pose.rot.u, current_pose.rot.x, current_pose.rot.y,
+                                                  current_pose.rot.z));
+  transforms_vector[0].stamp_ = current_time;
+  transforms_vector[0].frame_id_ = "world";
+  transforms_vector[0].child_frame_id_ = "base_link";
+  /*
+   // TODO: Temporal check.
+   transforms_vector[1].setOrigin(tf::Vector3(current_pose.pos.x, current_pose.pos.y, current_pose.pos.z));
+   transforms_vector[1].setRotation(tf::Quaternion(current_pose.rot.u, current_pose.rot.x, current_pose.rot.y,
+   current_pose.rot.z));
+   transforms_vector[1].stamp_ = current_time;
+   transforms_vector[1].frame_id_ = "base_link";
+   transforms_vector[1].child_frame_id_ = "front_axle";
+   */
+  // TODO: Front axle check.
+  Vector3 position;
+  tf::Quaternion rotation_quaternion;
+  Vector3 rotation_euler;
+
+  position = axle_joint_[FRONT]->GetAnchor(0); // Might even work, check index.
+  transforms_vector[1].setOrigin(tf::Vector3(position.x, position.y, position.z));
+  rotation_euler = axle_joint_[FRONT]->GetAxis(0);
+  rotation_quaternion.setEuler(rotation_euler.x, rotation_euler.y, rotation_euler.z);
+  transforms_vector[1].setRotation(rotation_quaternion);
+  transforms_vector[1].stamp_ = current_time;
+  transforms_vector[1].frame_id_ = "base_link";
+  transforms_vector[1].child_frame_id_ = "front_axle";
+
+  position = axle_joint_[BACK]->GetAnchor(0); // Might even work, check index.
+  transforms_vector[2].setOrigin(tf::Vector3(position.x, position.y, position.z));
+  rotation_euler = axle_joint_[BACK]->GetAxis(0);
+  rotation_quaternion.setEuler(rotation_euler.x, rotation_euler.y, rotation_euler.z);
+  transforms_vector[2].setRotation(rotation_quaternion);
+  transforms_vector[2].stamp_ = current_time;
+  transforms_vector[2].frame_id_ = "base_link";
+  transforms_vector[2].child_frame_id_ = "back_axle";
+
+  // Maybe using links (bodies) instead of joints, actually it is them we are interested on.
+  //Body *body = parent_ ->GetBody("front_axle");
+
+  transform_broadcaster_->sendTransform(transforms_vector);
+}

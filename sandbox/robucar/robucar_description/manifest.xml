@@ -1,0 +1,22 @@
+<package>
+  <description brief="robucar_description">
+
+     robucar_description
+
+  </description>
+  <author>Carlos</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/robucar_description</url>
+
+  <depend package="robucar_gazebo_plugins"/>
+  <depend package="gazebo" />
+  <depend package="gazebo_tools" />
+
+  <export>
+   <gazebo gazebo_media_path="${prefix}" />
+  </export>
+
+</package>
+
+

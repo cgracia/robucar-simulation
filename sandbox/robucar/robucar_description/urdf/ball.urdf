@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<robot name="Ball">
+
+    <!-- Just a sphere -->
+    <link name="ball">
+
+      <inertial>
+        <mass value="1" />
+        <inertia  ixx="1.0" ixy="0.0"  ixz="0.0"  iyy="1.0"  iyz="0.0"  izz="1.0" />
+      </inertial>
+
+      <visual>
+        <geometry>
+	  <sphere radius="0.2"/>
+        </geometry>
+        <material name="red">
+          <color rgba="0.8 0 0 1"/>
+        </material>
+      </visual>
+
+      <collision>
+        <geometry>
+	  <sphere radius="0.2"/>
+        </geometry>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+      </collision>
+
+    </link>
+
+    <gazebo reference="ball">
+      <material>Gazebo/Red</material>
+      <turnGravityOff>true</turnGravityOff>
+    </gazebo>
+
+</robot>

@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface" 
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       name="Robucar">
+
+  <!-- Robot part macros are included here. -->
+  <include filename="$(find robucar_description)/urdf/body.urdf.xacro" />
+  <include filename="$(find robucar_description)/urdf/axle.urdf.xacro" />
+  <include filename="$(find robucar_description)/urdf/wheel.urdf.xacro" />
+  <include filename="$(find robucar_description)/urdf/bearing.urdf.xacro" />
+  <include filename="$(find robucar_description)/urdf/head.urdf.xacro" />
+
+  <!-- Parameters -->
+  <xacro:property name="axle_length" value="1.2" />
+  <xacro:property name="axle_radius" value="0.02" />
+  <xacro:property name="axle_separation" value="1.2" />
+
+  <xacro:property name="wheel_radius" value="0.3" />
+  <!-- Wheel turn limits are set higher than the real value (0.4) to allow a little more room for the simulated PID controller to work. It will be limited to the actual value in the Gazebo plugin. -->
+  <xacro:property name="wheel_turn_lower" value="-0.5" />
+  <xacro:property name="wheel_turn_upper" value="0.5" />
+
+  <xacro:property name="wheel_turn_software_limit" value="0.4" />
+  <xacro:property name="robot_linear_speed_limit" value="4.0" />
+
+  <xacro:property name="robot_lenght" value="2.9" />
+  <xacro:property name="robot_width" value="1.1" />
+  <xacro:property name="robot_height" value="0.93" />
+  
+  <!-- Robot parts -->
+
+  <xacro:body />
+
+  <xacro:axle axle_name="front" x_position="${axle_separation/2}"/>
+  
+  <xacro:bearing bearing_name="front_left" parent_axle="front" side="1"/>
+
+  <xacro:wheel wheel_name="front_left" parent_bearing="front_left" side="1"/>
+
+  <xacro:bearing bearing_name="front_right" parent_axle="front" side="-1"/>
+
+  <xacro:wheel wheel_name="front_right" parent_bearing="front_right" side="-1"/>
+
+  <xacro:axle axle_name="back" x_position="${-axle_separation/2}"/>
+
+  <xacro:bearing bearing_name="back_left" parent_axle="back" side="1"/>
+
+  <xacro:wheel wheel_name="back_left" parent_bearing="back_left" side="1"/>
+
+  <xacro:bearing bearing_name="back_right" parent_axle="back" side="-1"/>
+
+  <xacro:wheel wheel_name="back_right" parent_bearing="back_right" side="-1"/>
+
+  <xacro:head />
+
+  <gazebo>
+    <controller:robucar_plugin name="robucar_plugin_controller" plugin="librobucar_plugin.so">
+
+      <alwaysOn>true</alwaysOn>
+      <update>100</update>
+      <updateRate>100.0</updateRate>
+
+      <frontAxleName>base_to_front_axle</frontAxleName>
+      <frontLeftBearingName>front_axle_to_front_left_bearing</frontLeftBearingName>
+      <frontLeftWheelName>front_left_bearing_to_front_left_wheel</frontLeftWheelName>
+      <frontRightBearingName>front_axle_to_front_right_bearing</frontRightBearingName>
+      <frontRightWheelName>front_right_bearing_to_front_right_wheel</frontRightWheelName>
+      <backAxleName>base_to_back_axle</backAxleName>
+      <backLeftBearingName>back_axle_to_back_left_bearing</backLeftBearingName>
+      <backLeftWheelName>back_left_bearing_to_back_left_wheel</backLeftWheelName>
+      <backRightBearingName>back_axle_to_back_right_bearing</backRightBearingName>
+      <backRightWheelName>back_right_bearing_to_back_right_wheel</backRightWheelName>
+
+      <wheelRadius>${wheel_radius}</wheelRadius>
+      <axleLength>${axle_length}</axleLength>
+      <axleSeparation>${axle_separation}</axleSeparation>
+
+      <wheelTurnSoftwareLimit>${wheel_turn_software_limit}</wheelTurnSoftwareLimit>
+      <robotLinearSpeedLimit>${robot_linear_speed_limit}</robotLinearSpeedLimit>
+
+      <robotNamespace>/robucar</robotNamespace>
+      <topicName>car/in</topicName>
+
+    </controller:robucar_plugin>
+  </gazebo>
+
+</robot>

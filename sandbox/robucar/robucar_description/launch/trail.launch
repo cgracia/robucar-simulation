@@ -1,0 +1,7 @@
+<?xml version="1.0"?> 
+<launch>
+  <arg name="gui" default="True" />
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find robucar_description)/urdf/robucar.urdf.xacro'" />
+  <param name="use_gui" value="$(arg gui)"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find robucar_description)/launch/urdf.vcg" /> <!-- Remember to put urdf.vcg in a nice accesible place. -->
+</launch>

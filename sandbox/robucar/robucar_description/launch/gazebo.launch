@@ -1,0 +1,15 @@
+<?xml version="1.0"?> 
+<launch>
+  <!-- start world -->
+  <include file="$(find robucar_description)/launch/empty_world.launch"/>
+
+  <!-- send urdf to param server -->
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find robucar_description)/urdf/robucar.urdf.xacro'" />
+
+  <node name="spawn_robucar" pkg="gazebo" type="spawn_model" args="-urdf -param robot_description -x 0 -y 0 -z 1.0 -model robucar -unpause" respawn="false" output="screen" />
+
+  <node name="extract_vel_cmd" pkg="robucar_simulation" type="extract_vel_cmd">
+    <remap from="car/in" to="robucar/car/in" />
+  </node>
+
+</launch>

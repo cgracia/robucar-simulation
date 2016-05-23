@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<launch>
+	<param name="/use_sim_time" value="true"/>
+
+	<include file="$(find rosbucar)/launch/tf_configuration.launch" />
+
+	<node name="localization2tf" pkg="rosbucar" type="localization2tf" />
+
+	<!--<node name="evaclock" pkg="rosbucar" type="clock" />-->
+
+	<node name="fuse_scan" pkg="fuse_scans" type="fuse_scans" >
+		<remap from="from" to="/back_laser/out" />
+		<remap from="to" to="/front_laser/out" />
+		<remap from="out" to="/scan" />
+	</node>
+	
+	<node name="pog" pkg="pog" type="test-pog" output="screen"/>
+<!--
+	<node name="map_builder" pkg="gmapping" type="slam_gmapping">
+		<param name="maxUrange" value="10.0" />
+	</node>
+-->	
+</launch>

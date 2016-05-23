@@ -1,0 +1,116 @@
+/*------------------------------------------------------------------------
+ *---------------------           RosbuCar              --------------------
+ *------------------------------------------------------------------------
+ *                                                         V1.0B  14/09/11
+ *
+ *
+ *  File: ./src/PureGpsDevice.cpp
+ *  Authors: Danilo Tardioli
+ *  ----------------------------------------------------------------------
+ *  Copyright (C) 2000-2010, Universidad de Zaragoza, SPAIN
+ *
+ *  Contact Addresses: Danilo Tardioli                   dantard@unizar.es
+ *
+ *  RT-WMP is free software; you can  redistribute it and/or  modify it
+ *  under the terms of the GNU General Public License  as published by the
+ *  Free Software Foundation;  either  version 2, or (at  your option) any
+ *  later version.
+ *
+ *  RT-WMP  is distributed  in the  hope  that  it will be   useful, but
+ *  WITHOUT  ANY  WARRANTY;     without  even the   implied   warranty  of
+ *  MERCHANTABILITY  or  FITNESS FOR A  PARTICULAR PURPOSE.    See the GNU
+ *  General Public License for more details.
+ *
+ *  You should have received  a  copy of  the  GNU General Public  License
+ *  distributed with RT-WMP;  see file COPYING.   If not,  write to the
+ *  Free Software  Foundation,  59 Temple Place  -  Suite 330,  Boston, MA
+ *  02111-1307, USA.
+ *
+ *  As a  special exception, if you  link this  unit  with other  files to
+ *  produce an   executable,   this unit  does  not  by  itself cause  the
+ *  resulting executable to be covered by the  GNU General Public License.
+ *  This exception does  not however invalidate  any other reasons why the
+ *  executable file might be covered by the GNU Public License.
+ *
+ *----------------------------------------------------------------------*/
+
+
+#include "PureGpsDevice.h"
+#include "PureDevice.h"
+#include "PureFrame.h"
+
+PureGpsDevice::PureGpsDevice(PureManager * pm, ros::NodeHandle * nh,
+		std::string server, unsigned device, std::string topic_name) :
+		PureDevice(pm, nh, server, device, topic_name) {
+}
+
+bool PureGpsDevice::connect() {
+	rxSize = 0;
+	int res = request(ActionCode.GET, device, rxBuff, rxSize);
+	if (res == 0){
+		PureGpsServiceResponse * r = (PureGpsServiceResponse *) rxBuff;
+		fprintf(stderr,"antenna: x %f, y: %f \n",r->x_antenna,r->y_antenna);
+		param = *r;
+		return true;
+	} else {
+		request_error(res,ActionCode.GET);
+		return false;
+	}
+}
+
+
+PureGpsDevice::~PureGpsDevice() {
+}
+
+int8_t PureGpsDevice::translateStatus(unsigned char gps_mode) const
+{
+    if (gps_mode == PureGpsOutboundNotification::SPS or
+            gps_mode == PureGpsOutboundNotification::PPS)
+        return sensor_msgs::NavSatStatus::STATUS_FIX;
+
+    if (gps_mode == PureGpsOutboundNotification::DSPS)
+        return sensor_msgs::NavSatStatus::STATUS_GBAS_FIX;
+
+    return sensor_msgs::NavSatStatus::STATUS_NO_FIX;
+}
+
+void PureGpsDevice::rxLoop() {
+	long long ts;
+    gps_novatel::NovatelInfo novatel_info;
+    sensor_msgs::NavSatFix gps_info;
+
+	PureGpsOutboundNotification * p = (PureGpsOutboundNotification * ) rxBuff;
+	while (keep_running) {
+                //std::cerr << "Waiting PURE Gps data" <<std::endl;
+		if (readNotification(ts,rxBuff,rxSize)){
+                //	std::cerr << "Reading PURE Gps data status:" << p->gps_mode << " x: "<< p->lat <<std::endl;
+                //	std::cerr << " rxSize *********" << rxSize << std::endl;
+			//info.header.stamp = p->gps_time;
+            gps_info.altitude = p->alt;
+            gps_info.header.frame_id = "/gps";
+            gps_info.latitude = p->lat;
+            gps_info.longitude = p->lon;
+            //gps_info.position_covariance
+            gps_info.position_covariance_type = sensor_msgs::NavSatFix::COVARIANCE_TYPE_APPROXIMATED;
+            gps_info.status.service = sensor_msgs::NavSatStatus::SERVICE_GPS;
+            gps_info.status.status = translateStatus(p->gps_mode);
+            //gps_info.position_covariance = // It was empty, commented.
+            novatel_info.lat = p->lat;
+            novatel_info.lon = p->lon;
+            novatel_info.alt = p->alt;
+            novatel_info.sol_status = p->gps_mode;
+            novatel_info.nObs = p->number_of_satellites;
+            novatel_info.header.stamp = getTimestamp(ts);
+			if (ros::ok()) {
+                pub_novatel_info.publish(novatel_info);
+			}
+		}
+	}
+}
+
+void PureGpsDevice::createTopics() {
+    pub_novatel_info = nh->advertise<gps_novatel::NovatelInfo>(topic_name + "/out_novatel", 100, false);
+    pub_gps_info = nh->advertise<sensor_msgs::NavSatFix>(topic_name + "/out_gps", 100, false);
+}
+
+
